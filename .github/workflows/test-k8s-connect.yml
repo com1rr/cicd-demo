@@ -1,0 +1,21 @@
+name: Test K8s Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-k8s:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test TCP connection to K8s API Server
+        run: |
+          echo "Testing TCP connection..."
+          timeout 10 bash -c "</dev/tcp/11.0.1.10/6443" \
+            && echo "TCP CONNECT OK" \
+            || echo "TCP CONNECT FAILED"
+
+      - name: Test HTTPS connection to K8s API Server
+        run: |
+          echo "Testing HTTPS connection..."
+          curl -k -v --connect-timeout 10 https://11.0.1.10:6443

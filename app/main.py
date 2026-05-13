@@ -1,6 +1,10 @@
 from flask import Flask
+
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/")
 def index():
-    return "Hello DevOps CI/CD Demo!"
+    return "Hello DevOps CI/CD Demo v2 from GitHub Actions!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

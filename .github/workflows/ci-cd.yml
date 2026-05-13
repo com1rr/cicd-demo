@@ -66,11 +66,27 @@ jobs:
 
           ssh-keyscan -H "${{ secrets.K8S_HOST }}" >> ~/.ssh/known_hosts
 
-          ssh ${{ secrets.K8S_USER }}@${{ secrets.K8S_HOST }} "
-            kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
-              ${{ env.CONTAINER_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
-              -n ${{ env.NAMESPACE }}
+          ssh ${{ secrets.K8S_USER }}@${{ secrets.K8S_HOST }} '
+            set -e
 
+          echo "Updating deployment image..."
+          kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
+            ${{ env.CONTAINER_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          -n ${{ env.NAMESPACE }}
+
+          echo "Waiting for rollout..."
+          if kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }} --timeout=120s; then
+            echo "Deployment succeeded."
+          else
+            echo "Deployment failed. Rolling back..."
+            kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} \
+            -n ${{ env.NAMESPACE }}
+
+            echo "Waiting for rollback..."
             kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
-              -n ${{ env.NAMESPACE }}
-          "
+            -n ${{ env.NAMESPACE }} --timeout=120s
+
+            exit 1
+            fi
+          '

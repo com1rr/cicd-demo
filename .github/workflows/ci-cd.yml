@@ -32,7 +32,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest tests/
+          PYTHONPATH=$GITHUB_WORKSPACE pytest tests/
 
   build-and-deploy:
     runs-on: ubuntu-latest

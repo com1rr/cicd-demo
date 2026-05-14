@@ -43,6 +43,7 @@ Calico CNI
 Argo CD
 阿里云 ECS
 项目结构
+```text
 cicd-demo/
 ├── app/
 │   ├── __init__.py
@@ -63,6 +64,7 @@ cicd-demo/
 ├── Dockerfile
 ├── .dockerignore
 └── README.md
+```
 CI/CD 流程
 
 本项目采用 GitHub Actions + Argo CD 的分工方式：
@@ -72,7 +74,7 @@ Argo CD：负责监听 Git 中的 Kubernetes 配置，并同步到集群
 1. CI：自动测试
 
 每次向 main 分支提交代码后，GitHub Actions 会先执行测试：
-
+```
 拉取代码
 ↓
 安装 Python 环境
@@ -80,13 +82,13 @@ Argo CD：负责监听 Git 中的 Kubernetes 配置，并同步到集群
 安装依赖
 ↓
 运行 pytest
-
+```
 如果测试失败，后续 Docker 镜像构建和 manifest 更新不会继续执行。
 
 2. Build：构建并推送镜像
 
 测试通过后，GitHub Actions 会：
-
+```
 登录阿里云 ACR
 ↓
 使用 Docker Buildx 构建镜像
@@ -94,7 +96,7 @@ Argo CD：负责监听 Git 中的 Kubernetes 配置，并同步到集群
 使用 commit hash 作为镜像 tag
 ↓
 推送镜像到阿里云 ACR
-
+```
 镜像 tag 不再依赖 latest，而是使用 Git commit hash，例如：
 
 devops-cicd-demo:69782e306e83126ce7a0c1daaf9b2d3c3dd58f25
@@ -184,6 +186,7 @@ Argo CD Self Heal 自动修复集群漂移
 Kubernetes prod namespace 独立部署
 NodePort 暴露服务
 当前发布链路
+```
 Developer
   ↓ git push
 GitHub Repository
@@ -203,16 +206,17 @@ Argo CD
 Kubernetes prod namespace
   ↓ rolling update
 Browser
+```
 传统 CI/CD 与 GitOps 的区别
 
 早期版本中，本项目使用：
-
+```
 GitHub Actions
 ↓
 SSH 到 Kubernetes master
 ↓
 kubectl set image
-
+```
 这种方式可以跑通自动部署，但 GitHub Actions 需要直接操作集群。
 
 当前版本改为 GitOps 模式：

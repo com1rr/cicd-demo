@@ -19,5 +19,8 @@ spec:
         - name: devops-cicd-demo
           image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:dee63edae1dbfe1e91ae0e7be4bcbe4a761ced38
           imagePullPolicy: Always
+          env:
+          - name: ENV_NAME
+            value: "dev"
           ports:
             - containerPort: 5000

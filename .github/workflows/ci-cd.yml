@@ -2,6 +2,8 @@ name: CI/CD GitOps
 
 on:
   push:
+    branches: [ main, dev ]
+  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
@@ -11,7 +13,6 @@ permissions:
 env:
   REGISTRY: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com
   IMAGE_NAME: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo
-  PROD_MANIFEST: k8s/prod/deployment.yaml
 
 jobs:
   test:
@@ -38,12 +39,26 @@ jobs:
   build-and-update-manifest:
     runs-on: ubuntu-latest
     needs: test
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set target environment
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "TARGET_ENV=prod" >> $GITHUB_ENV
+            echo "MANIFEST_PATH=k8s/prod/deployment.yaml" >> $GITHUB_ENV
+          elif [ "${GITHUB_REF_NAME}" = "dev" ]; then
+            echo "TARGET_ENV=dev" >> $GITHUB_ENV
+            echo "MANIFEST_PATH=k8s/dev/deployment.yaml" >> $GITHUB_ENV
+          else
+            echo "Unsupported branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
 
       - name: Login to Aliyun ACR
         uses: docker/login-action@v3
@@ -66,25 +81,26 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Update prod Kubernetes manifest
+      - name: Update Kubernetes manifest
         run: |
-          echo "Updating image tag in $PROD_MANIFEST"
+          echo "Target environment: $TARGET_ENV"
+          echo "Manifest path: $MANIFEST_PATH"
 
-          sed -i "s#image: .*devops-cicd-demo.*#image: $IMAGE_NAME:${{ github.sha }}#g" $PROD_MANIFEST
+          sed -i "s#image: .*devops-cicd-demo.*#image: $IMAGE_NAME:${{ github.sha }}#g" $MANIFEST_PATH
 
-          echo "Updated manifest:"
-          grep "image:" $PROD_MANIFEST
+          echo "Updated image:"
+          grep "image:" $MANIFEST_PATH
 
       - name: Commit and push manifest change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add $PROD_MANIFEST
+          git add $MANIFEST_PATH
 
           if git diff --cached --quiet; then
             echo "No manifest changes to commit."
           else
-            git commit -m "chore: update prod image to ${{ github.sha }} [skip ci]"
-            git push
+            git commit -m "chore: update $TARGET_ENV image to ${{ github.sha }} [skip ci]"
+            git push origin HEAD:${GITHUB_REF_NAME}
           fi

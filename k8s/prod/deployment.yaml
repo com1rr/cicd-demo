@@ -17,7 +17,7 @@ spec:
         - name: acr-secret
       containers:
         - name: devops-cicd-demo
-          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:329c6bf2508e9cfd13478280c67d39ee10697ca8
+          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:d1d6e45897b213d8a18d87a238974693079ea07a
           imagePullPolicy: Always
           ports:
             - containerPort: 5000

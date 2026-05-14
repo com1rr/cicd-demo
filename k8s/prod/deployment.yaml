@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-cicd-demo
+  namespace: prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devops-cicd-demo
+  template:
+    metadata:
+      labels:
+        app: devops-cicd-demo
+    spec:
+      imagePullSecrets:
+        - name: acr-secret
+      containers:
+        - name: devops-cicd-demo
+          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000

@@ -30,6 +30,7 @@ Argo CD 检测 Git 状态变化
 自动同步到 Kubernetes prod 环境
 ```
 技术栈
+```
 Python Flask
 Gunicorn
 Docker
@@ -42,6 +43,7 @@ containerd
 Calico CNI
 Argo CD
 阿里云 ECS
+```
 项目结构
 ```text
 cicd-demo/
@@ -68,9 +70,10 @@ cicd-demo/
 CI/CD 流程
 
 本项目采用 GitHub Actions + Argo CD 的分工方式：
-
+```
 GitHub Actions：负责 CI、镜像构建、镜像推送、更新 Git 中的部署配置
 Argo CD：负责监听 Git 中的 Kubernetes 配置，并同步到集群
+```
 1. CI：自动测试
 
 每次向 main 分支提交代码后，GitHub Actions 会先执行测试：
@@ -98,17 +101,17 @@ Argo CD：负责监听 Git 中的 Kubernetes 配置，并同步到集群
 推送镜像到阿里云 ACR
 ```
 镜像 tag 不再依赖 latest，而是使用 Git commit hash，例如：
-
+```
 devops-cicd-demo:69782e306e83126ce7a0c1daaf9b2d3c3dd58f25
-
+```
 这样可以明确追踪线上版本，也方便回滚。
 
 3. GitOps：更新 Kubernetes Manifest
 
 镜像推送完成后，GitHub Actions 会自动修改：
-
+```
 k8s/prod/deployment.yaml
-
+```
 将其中的镜像 tag 更新为本次构建的 commit hash。
 
 然后 Actions 会把 manifest 变更提交回 GitHub。
@@ -116,16 +119,16 @@ k8s/prod/deployment.yaml
 4. CD：Argo CD 自动同步
 
 Argo CD 监听 GitHub 仓库中的：
-
+```
 k8s/prod
-
+```
 当 deployment.yaml 发生变化后，Argo CD 会检测到 Git 中的期望状态与集群实际状态不一致，并自动同步到 Kubernetes 的 prod namespace。
 
 当前 Argo CD 开启了：
-
+```
 Auto Sync
 Self Heal
-
+```
 这意味着：
 
 Git 中的配置变化后，Argo CD 会自动部署
@@ -135,24 +138,25 @@ Kubernetes 部署
 应用部署在 Kubernetes 集群中。
 
 生产环境 namespace：
-
+```
 prod
-
+```
 Deployment 副本数：
-
+```
 2
-
+```
 Service 类型：
-
+```
 NodePort
-
+```
 prod 环境访问端口：
-
+```
 30082
-
+```
 访问方式：
-
+```
 http://<服务器公网IP>:30082
+```
 GitHub Secrets
 
 项目需要在 GitHub 仓库中配置以下 Secrets：
@@ -171,6 +175,7 @@ SSH_PRIVATE_KEY	GitHub Actions SSH 登录 master 的私钥
 当前 GitOps 版本中，生产环境部署由 Argo CD 接管，GitHub Actions 不再直接 SSH 到 master 执行 kubectl。
 
 已实现功能
+```
 Flask 应用容器化
 pytest 自动测试
 测试通过后才允许构建镜像
@@ -185,6 +190,7 @@ Argo CD 自动同步到 Kubernetes
 Argo CD Self Heal 自动修复集群漂移
 Kubernetes prod namespace 独立部署
 NodePort 暴露服务
+```
 当前发布链路
 ```
 Developer

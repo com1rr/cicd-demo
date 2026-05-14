@@ -1,16 +1,17 @@
-name: CI/CD
+name: CI/CD GitOps
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   REGISTRY: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com
   IMAGE_NAME: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo
-  DEPLOYMENT_NAME: devops-cicd-demo
-  CONTAINER_NAME: devops-cicd-demo
-  NAMESPACE: default
+  PROD_MANIFEST: k8s/prod/deployment.yaml
 
 jobs:
   test:
@@ -34,13 +35,15 @@ jobs:
         run: |
           PYTHONPATH=$GITHUB_WORKSPACE pytest tests/
 
-  build-and-deploy:
+  build-and-update-manifest:
     runs-on: ubuntu-latest
     needs: test
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Aliyun ACR
         uses: docker/login-action@v3
@@ -63,35 +66,25 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to K8s by SSH
+      - name: Update prod Kubernetes manifest
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "Updating image tag in $PROD_MANIFEST"
 
-          ssh-keyscan -H "${{ secrets.K8S_HOST }}" >> ~/.ssh/known_hosts
+          sed -i "s#image: .*devops-cicd-demo.*#image: $IMAGE_NAME:${{ github.sha }}#g" $PROD_MANIFEST
 
-          ssh ${{ secrets.K8S_USER }}@${{ secrets.K8S_HOST }} '
-            set -e
+          echo "Updated manifest:"
+          grep "image:" $PROD_MANIFEST
 
-          echo "Updating deployment image..."
-          kubectl set image deployment/${{ env.DEPLOYMENT_NAME }} \
-            ${{ env.CONTAINER_NAME }}=${{ env.IMAGE_NAME }}:${{ github.sha }} \
-          -n ${{ env.NAMESPACE }}
+      - name: Commit and push manifest change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          echo "Waiting for rollout..."
-          if kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
-            -n ${{ env.NAMESPACE }} --timeout=120s; then
-            echo "Deployment succeeded."
+          git add $PROD_MANIFEST
+
+          if git diff --cached --quiet; then
+            echo "No manifest changes to commit."
           else
-            echo "Deployment failed. Rolling back..."
-            kubectl rollout undo deployment/${{ env.DEPLOYMENT_NAME }} \
-            -n ${{ env.NAMESPACE }}
-
-            echo "Waiting for rollback..."
-            kubectl rollout status deployment/${{ env.DEPLOYMENT_NAME }} \
-            -n ${{ env.NAMESPACE }} --timeout=120s
-
-            exit 1
-            fi
-          '
+            git commit -m "chore: update prod image to ${{ github.sha }} [skip ci]"
+            git push
+          fi

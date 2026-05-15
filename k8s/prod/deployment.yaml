@@ -21,6 +21,9 @@ spec:
           imagePullPolicy: Always
           env:
           - name: ENV_NAME
-            value: "prod"
+            valueFrom:
+              configMapKeyRef:
+                name: devops-cicd-demo-config
+                key: ENV_NAME
           ports:
             - containerPort: 5000

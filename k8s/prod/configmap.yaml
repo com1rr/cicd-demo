@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-cicd-demo-config
+  namespace: prod
+data:
+  ENV_NAME: prod

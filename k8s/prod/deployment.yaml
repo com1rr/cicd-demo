@@ -17,7 +17,7 @@ spec:
         - name: acr-secret
       containers:
         - name: devops-cicd-demo
-          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:29367e1b4d5e50f736a5b75f0990c936ca739a21
+          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:7a855c3d3f2c40b10ec69536e7a8ed7487317542
           imagePullPolicy: Always
           env:
           - name: ENV_NAME

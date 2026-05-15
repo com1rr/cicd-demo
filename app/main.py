@@ -4,6 +4,10 @@ from flask import Flask
 app = Flask(__name__)
 
 @app.route("/")
-def index():
+def hello():
     env_name = os.getenv("ENV_NAME", "unknown")
-    return f"Hello DevOps from {env_name} environment!"
+    demo_secret = os.getenv("DEMO_SECRET", "")
+
+    secret_loaded = "yes" if demo_secret else "no"
+
+    return f"Hello DevOps from {env_name} environment! Secret loaded: {secret_loaded}"

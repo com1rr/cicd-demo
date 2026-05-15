@@ -17,10 +17,13 @@ spec:
         - name: acr-secret
       containers:
         - name: devops-cicd-demo
-          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:faa20f6f03d332714d28e6974d53b6eb619e95a6
+          image: crpi-pleclmjo9htj5t3x.cn-hangzhou.personal.cr.aliyuncs.com/devops-cicd-demo/devops-cicd-demo:5ab35b46217bc89656662037074fbe2fc81cd955
           imagePullPolicy: Always
           env:
           - name: ENV_NAME
-            value: "dev"
+            valueFrom:
+              configMapKeyRef:
+                name: devops-cicd-demo-config
+                key: ENV_NAME
           ports:
             - containerPort: 5000

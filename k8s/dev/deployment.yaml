@@ -25,5 +25,10 @@ spec:
               configMapKeyRef:
                 name: devops-cicd-demo-config
                 key: ENV_NAME
+          - name: DEMO_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: devops-cicd-demo-secret
+                key: DEMO_SECRET
           ports:
             - containerPort: 5000
